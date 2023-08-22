@@ -17,18 +17,22 @@ const server = new ApolloServer({
 const startApolloServer = async () => {
   await server.start();
 
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
+  
+  app.use('/graphql', expressMiddleware(server, {
+     context: authMiddleware,
+   }));
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
 
+    // app.use('/graphql', expressMiddleware(server));
+
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     })
-    app.use('/graphql', expressMiddleware(server, {
-      context: authMiddleware,
-    }));
+    
   }
 
   db.once('open', () => {
